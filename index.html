@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campo Minado 💣</title>
+  <style>
+    /* Estilização básica para a página */
+    body {
+      font-family: Arial, sans-serif; /* Fonte da página */
+      display: flex; /* Alinhamento flexível para centralizar o conteúdo */
+      flex-direction: column; /* Direção em coluna */
+      align-items: center; /* Centraliza os itens horizontalmente */
+      background-color: #282c34; /* Cor de fundo escura */
+      color: white; /* Texto branco */
+      margin: 0; /* Remove margens da página */
+      padding: 20px; /* Espaço interno na página */
+    }
+
+    /* Estilização do título */
+    h1 {
+      margin-bottom: 20px; /* Espaço abaixo do título */
+      color: #ff6f61; /* Cor laranja */
+    }
+
+    /* Contêiner do tabuleiro */
+    #game-container {
+      display: grid; /* Usa grade para organizar as células */
+      grid-template-columns: repeat(10, 50px); /* 10 colunas de 50px cada */
+      grid-gap: 5px; /* Espaço entre as células */
+      background-color: #444; /* Cor de fundo do tabuleiro */
+      padding: 10px; /* Espaço interno do tabuleiro */
+      border-radius: 10px; /* Bordas arredondadas */
+    }
+
+    /* Estilização básica das células */
+    .cell {
+      width: 50px; /* Largura das células */
+      height: 50px; /* Altura das células */
+      display: flex; /* Centraliza conteúdo */
+      justify-content: center; /* Alinha horizontalmente o conteúdo */
+      align-items: center; /* Alinha verticalmente o conteúdo */
+      font-size: 24px; /* Tamanho do texto dentro das células */
+      background-color: #61dafb; /* Cor inicial das células (azul) */
+      border-radius: 5px; /* Bordas arredondadas */
+      cursor: pointer; /* Mostra cursor de clique */
+      transition: transform 0.2s, background-color 0.2s; /* Animação suave ao interagir */
+      color: transparent; /* Texto invisível inicialmente */
+    }
+
+    /* Efeito de hover para interação visual */
+    .cell:hover {
+      transform: scale(1.1); /* Aumenta ligeiramente a célula ao passar o mouse */
+    }
+
+    /* Célula revelada */
+    .cell.revealed {
+      background-color: #b2f7ef; /* Cor de célula segura */
+      color: black; /* Mostra o texto (número de bombas adjacentes) */
+    }
+
+    /* Célula revelada contendo uma bomba */
+    .cell.bomb.revealed {
+      background-color: #ff6f61; /* Cor vermelha para bomba */
+      color: white; /* Ícone de bomba em branco */
+    }
+  </style>
+</head>
+<body>
+  <!-- Título do jogo -->
+  <h1>Campo Minado 💣</h1>
+  <!-- Contêiner onde o tabuleiro será gerado -->
+  <div id="game-container"></div>
+  <script>
+    const gameContainer = document.getElementById("game-container"); // Seleciona o contêiner do jogo
+    const rows = 10; // Define o número de linhas do tabuleiro
+    const cols = 10; // Define o número de colunas do tabuleiro
+    const bombCount = 15; // Quantidade de bombas no tabuleiro
+
+    // Função para criar o tabuleiro
+    function createBoard() {
+      const cells = []; // Array para armazenar as células
+      for (let i = 0; i < rows * cols; i++) {
+        const cell = document.createElement("div"); // Cria uma nova célula (div)
+        cell.classList.add("cell"); // Adiciona a classe "cell" para estilização
+        cell.dataset.id = i; // Adiciona um identificador único para a célula
+        gameContainer.appendChild(cell); // Adiciona a célula ao contêiner do jogo
+        cells.push(cell); // Armazena a célula no array
+      }
+
+      // Distribui bombas aleatoriamente pelo tabuleiro
+      let bombsPlaced = 0; // Contador de bombas colocadas
+      while (bombsPlaced < bombCount) {
+        const randomIndex = Math.floor(Math.random() * cells.length); // Seleciona uma posição aleatória
+        if (!cells[randomIndex].classList.contains("bomb")) {
+          // Verifica se a posição já tem uma bomba
+          cells[randomIndex].classList.add("bomb"); // Adiciona a classe "bomb" para marcar como bomba
+          bombsPlaced++; // Incrementa o contador de bombas
+        }
+      }
+
+      return cells; // Retorna o array de células
+    }
+
+    // Função para lidar com o clique em uma célula
+    function handleCellClick(event) {
+      const cell = event.target; // Obtém a célula clicada
+      if (cell.classList.contains("revealed")) return; // Ignora se a célula já foi revelada
+
+      cell.classList.add("revealed"); // Marca a célula como revelada
+
+      if (cell.classList.contains("bomb")) {
+        // Se a célula for uma bomba
+        cell.innerHTML = "💣"; // Mostra o ícone de bomba
+        revealAllBombs(); // Revela todas as bombas
+        alert("Game Over!"); // Exibe mensagem de fim de jogo
+      } else {
+        // Se for uma célula segura
+        const adjacentBombs = getAdjacentBombs(cell.dataset.id); // Calcula bombas adjacentes
+        cell.innerHTML = adjacentBombs || ""; // Exibe o número de bombas adjacentes ou vazio
+      }
+    }
+
+    // Função para revelar todas as bombas no tabuleiro
+    function revealAllBombs() {
+      cells.forEach((cell) => {
+        if (cell.classList.contains("bomb")) {
+          // Revela todas as células com bombas
+          cell.classList.add("revealed");
+          cell.innerHTML = "💣";
+        }
+      });
+    }
+
+    // Função para calcular o número de bombas adjacentes
+    function getAdjacentBombs(index) {
+      const row = Math.floor(index / cols); // Calcula a linha da célula
+      const col = index % cols; // Calcula a coluna da célula
+      let count = 0; // Inicializa o contador de bombas adjacentes
+
+      // Percorre as células ao redor (3x3)
+      for (let r = row - 1; r <= row + 1; r++) {
+        for (let c = col - 1; c <= col + 1; c++) {
+          // Verifica se a célula está dentro dos limites do tabuleiro
+          if (r >= 0 && r < rows && c >= 0 && c < cols) {
+            const neighborIndex = r * cols + c; // Calcula o índice da célula vizinha
+            if (cells[neighborIndex].classList.contains("bomb")) {
+              count++; // Incrementa o contador se a célula vizinha for uma bomba
+            }
+          }
+        }
+      }
+
+      return count; // Retorna o número de bombas adjacentes
+    }
+
+    const cells = createBoard(); // Cria o tabuleiro
+    cells.forEach((cell) => cell.addEventListener("click", handleCellClick)); // Adiciona o evento de clique em cada célula
+  </script>
+</body>
+</html>
